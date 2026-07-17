@@ -1,0 +1,27 @@
+# Build output
+main.js
+
+# npm
+node_modules/
+package-lock.json
+
+# Environment
+.env
+.env.*
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Obsidian
+data.json
+
+# Diagnostic scripts
+diagnose_gemini.mjs
+
+# System generated
+.gemini/

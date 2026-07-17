@@ -1,0 +1,702 @@
+/* ═══════════════════════════════════════════════════════════════
+   AI Copilot — Estilos del plugin
+   Usa CSS variables de Obsidian para adaptarse al tema del usuario
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Variables internas ───────────────────────────────────────── */
+.ai-copilot-view {
+  --ai-user-bg: var(--interactive-accent);
+  --ai-user-text: var(--text-on-accent);
+  --ai-assistant-bg: var(--background-secondary);
+  --ai-assistant-border: var(--background-modifier-border);
+  --ai-tool-bg: var(--background-primary-alt);
+  --ai-tool-border: var(--interactive-accent);
+  --ai-confirm-bg: color-mix(in srgb, var(--color-orange) 15%, var(--background-primary));
+  --ai-confirm-border: var(--color-orange);
+  --ai-error-bg: color-mix(in srgb, var(--color-red) 15%, var(--background-primary));
+  --ai-error-border: var(--color-red);
+  --ai-radius: 12px;
+  --ai-radius-sm: 8px;
+  --ai-gap: 12px;
+  --ai-transition: 0.2s ease;
+
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  font-family: var(--font-interface);
+}
+
+/* ── Header ───────────────────────────────────────────────────── */
+.ai-copilot-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--background-modifier-border);
+  background: var(--background-primary);
+  flex-shrink: 0;
+  gap: 8px;
+}
+
+.ai-copilot-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ai-copilot-header-icon {
+  color: var(--interactive-accent);
+  display: flex;
+  align-items: center;
+}
+
+.ai-copilot-header-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.ai-copilot-header-title {
+  font-weight: 600;
+  font-size: 0.95em;
+  color: var(--text-normal);
+}
+
+.ai-copilot-header-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.ai-copilot-icon-btn {
+  background: none;
+  border: none;
+  border-radius: var(--ai-radius-sm);
+  padding: 6px;
+  cursor: pointer;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--ai-transition), color var(--ai-transition);
+}
+
+.ai-copilot-icon-btn:hover {
+  background: var(--background-modifier-hover);
+  color: var(--text-normal);
+}
+
+.ai-copilot-icon-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* ── Mensajes ─────────────────────────────────────────────────── */
+.ai-copilot-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--ai-gap);
+  scroll-behavior: smooth;
+}
+
+.ai-copilot-messages::-webkit-scrollbar {
+  width: 4px;
+}
+
+.ai-copilot-messages::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.ai-copilot-messages::-webkit-scrollbar-thumb {
+  background: var(--background-modifier-border);
+  border-radius: 4px;
+}
+
+/* Mensaje del usuario */
+.ai-copilot-message-user {
+  align-self: flex-end;
+  max-width: 85%;
+}
+
+.ai-copilot-message-user .ai-copilot-message-content {
+  background: var(--ai-user-bg);
+  color: var(--ai-user-text);
+  border-radius: var(--ai-radius) var(--ai-radius) 4px var(--ai-radius);
+  padding: 10px 14px;
+  font-size: 0.9em;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Mensaje del asistente */
+.ai-copilot-message-assistant {
+  align-self: flex-start;
+  max-width: 95%;
+  width: 100%;
+}
+
+.ai-copilot-message-assistant .ai-copilot-message-content {
+  background: var(--ai-assistant-bg);
+  border: 1px solid var(--ai-assistant-border);
+  border-radius: 4px var(--ai-radius) var(--ai-radius) var(--ai-radius);
+  padding: 12px 16px;
+  font-size: 0.88em;
+  line-height: 1.6;
+  color: var(--text-normal);
+}
+
+/* Renderizado Markdown dentro de mensajes */
+.ai-copilot-message-content p {
+  margin: 0 0 8px 0;
+}
+
+.ai-copilot-message-content p:last-child {
+  margin-bottom: 0;
+}
+
+.ai-copilot-message-content h1,
+.ai-copilot-message-content h2,
+.ai-copilot-message-content h3 {
+  margin: 12px 0 6px;
+  color: var(--text-normal);
+}
+
+.ai-copilot-message-content ul,
+.ai-copilot-message-content ol {
+  margin: 6px 0;
+  padding-left: 20px;
+}
+
+.ai-copilot-message-content li {
+  margin: 2px 0;
+}
+
+.ai-copilot-message-content code {
+  background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-size: 0.85em;
+  font-family: var(--font-monospace);
+}
+
+.ai-copilot-message-content pre {
+  background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--ai-radius-sm);
+  padding: 12px;
+  overflow-x: auto;
+  margin: 8px 0;
+}
+
+.ai-copilot-message-content pre code {
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+.ai-copilot-message-content blockquote {
+  border-left: 3px solid var(--interactive-accent);
+  padding-left: 12px;
+  color: var(--text-muted);
+  margin: 8px 0;
+}
+
+/* Cursor de streaming */
+.ai-copilot-cursor {
+  display: inline-block;
+  width: 2px;
+  height: 1.1em;
+  background: var(--interactive-accent);
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  animation: ai-cursor-blink 1s step-end infinite;
+}
+
+@keyframes ai-cursor-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* Mensaje streaming */
+.ai-copilot-message-streaming .ai-copilot-message-content {
+  border-color: var(--interactive-accent-hover);
+}
+
+/* ── Tool calls ───────────────────────────────────────────────── */
+.ai-copilot-tool-call {
+  border-left: 3px solid var(--ai-tool-border);
+  background: var(--ai-tool-bg);
+  border-radius: 0 var(--ai-radius-sm) var(--ai-radius-sm) 0;
+  padding: 8px 12px;
+  font-size: 0.82em;
+  color: var(--text-muted);
+  align-self: flex-start;
+  max-width: 90%;
+}
+
+.ai-copilot-tool-call-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ai-copilot-tool-call-header svg {
+  width: 12px;
+  height: 12px;
+  color: var(--interactive-accent);
+  flex-shrink: 0;
+}
+
+.ai-copilot-tool-result {
+  border-left: 3px solid var(--background-modifier-border);
+  background: var(--ai-tool-bg);
+  border-radius: 0 var(--ai-radius-sm) var(--ai-radius-sm) 0;
+  padding: 6px 12px;
+  font-size: 0.8em;
+  color: var(--text-faint);
+  align-self: flex-start;
+}
+
+.ai-copilot-tool-result-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ai-copilot-tool-result-header svg {
+  width: 12px;
+  height: 12px;
+}
+
+.ai-copilot-tool-success {
+  border-left-color: var(--color-green);
+}
+
+.ai-copilot-tool-success .ai-copilot-tool-result-header svg {
+  color: var(--color-green);
+}
+
+.ai-copilot-tool-error {
+  border-left-color: var(--color-red);
+}
+
+.ai-copilot-tool-error .ai-copilot-tool-result-header svg {
+  color: var(--color-red);
+}
+
+/* ── Confirmaciones ───────────────────────────────────────────── */
+.ai-copilot-confirmation {
+  background: var(--ai-confirm-bg);
+  border: 1px solid var(--ai-confirm-border);
+  border-radius: var(--ai-radius);
+  padding: 14px 16px;
+  align-self: flex-start;
+  max-width: 95%;
+  width: 100%;
+}
+
+.ai-copilot-confirmation-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.ai-copilot-confirmation-header svg {
+  width: 16px;
+  height: 16px;
+  color: var(--color-orange);
+}
+
+.ai-copilot-confirmation-title {
+  font-weight: 600;
+  font-size: 0.88em;
+  color: var(--text-normal);
+}
+
+.ai-copilot-confirmation-desc {
+  font-size: 0.85em;
+  color: var(--text-muted);
+  margin: 0 0 12px;
+  line-height: 1.4;
+}
+
+.ai-copilot-confirmation-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.ai-copilot-confirm-btn,
+.ai-copilot-reject-btn {
+  padding: 6px 14px;
+  border-radius: var(--ai-radius-sm);
+  border: 1px solid transparent;
+  font-size: 0.85em;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all var(--ai-transition);
+}
+
+.ai-copilot-confirm-btn {
+  background: var(--interactive-accent);
+  color: var(--text-on-accent);
+}
+
+.ai-copilot-confirm-btn:hover:not(:disabled) {
+  background: var(--interactive-accent-hover);
+}
+
+.ai-copilot-reject-btn {
+  background: var(--background-modifier-border);
+  color: var(--text-normal);
+}
+
+.ai-copilot-reject-btn:hover:not(:disabled) {
+  background: var(--background-modifier-border-hover);
+}
+
+.ai-copilot-confirm-btn:disabled,
+.ai-copilot-reject-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.ai-copilot-confirmation-resolved {
+  opacity: 0.7;
+}
+
+/* ── Errores ──────────────────────────────────────────────────── */
+.ai-copilot-error-message {
+  background: var(--ai-error-bg);
+  border: 1px solid var(--ai-error-border);
+  border-radius: var(--ai-radius);
+  padding: 10px 14px;
+  font-size: 0.85em;
+  color: var(--text-normal);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  align-self: flex-start;
+  max-width: 95%;
+}
+
+.ai-copilot-error-message svg {
+  width: 16px;
+  height: 16px;
+  color: var(--color-red);
+  flex-shrink: 0;
+}
+
+/* ── Bienvenida ───────────────────────────────────────────────── */
+.ai-copilot-welcome {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 32px 16px;
+  text-align: center;
+  gap: 12px;
+  animation: ai-fade-in 0.4s ease;
+}
+
+@keyframes ai-fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.ai-copilot-welcome-icon {
+  width: 56px;
+  height: 56px;
+  background: color-mix(in srgb, var(--interactive-accent) 15%, var(--background-primary));
+  border: 2px solid color-mix(in srgb, var(--interactive-accent) 30%, transparent);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--interactive-accent);
+}
+
+.ai-copilot-welcome-icon svg {
+  width: 28px;
+  height: 28px;
+}
+
+.ai-copilot-welcome h2 {
+  margin: 0;
+  font-size: 1.2em;
+  font-weight: 700;
+  color: var(--text-normal);
+}
+
+.ai-copilot-welcome p {
+  margin: 0;
+  font-size: 0.85em;
+  color: var(--text-muted);
+  max-width: 220px;
+  line-height: 1.5;
+}
+
+.ai-copilot-examples {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  margin-top: 8px;
+}
+
+.ai-copilot-example-chip {
+  background: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--ai-radius-sm);
+  padding: 8px 12px;
+  font-size: 0.82em;
+  color: var(--text-muted);
+  cursor: pointer;
+  text-align: left;
+  transition: all var(--ai-transition);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+}
+
+.ai-copilot-example-chip:hover {
+  background: var(--background-modifier-hover);
+  color: var(--text-normal);
+  border-color: var(--interactive-accent);
+  transform: translateX(2px);
+}
+
+.ai-copilot-warning {
+  background: var(--ai-error-bg);
+  border: 1px solid var(--ai-error-border);
+  border-radius: var(--ai-radius-sm);
+  padding: 10px 14px;
+  font-size: 0.82em;
+  color: var(--text-normal);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  text-align: left;
+  width: 100%;
+  margin-top: 4px;
+}
+
+.ai-copilot-warning svg {
+  width: 14px;
+  height: 14px;
+  color: var(--color-red);
+  flex-shrink: 0;
+}
+
+/* ── Status Bar ───────────────────────────────────────────────── */
+.ai-copilot-status-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 16px;
+  border-top: 1px solid var(--background-modifier-border);
+  border-bottom: 1px solid var(--background-modifier-border);
+  background: var(--background-secondary);
+  flex-shrink: 0;
+}
+
+.ai-copilot-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-green);
+  flex-shrink: 0;
+  transition: background var(--ai-transition);
+}
+
+.ai-copilot-status-dot.ai-copilot-status-thinking {
+  background: var(--color-yellow);
+  animation: ai-pulse 1.2s ease-in-out infinite;
+}
+
+.ai-copilot-status-dot.ai-copilot-status-tool {
+  background: var(--interactive-accent);
+  animation: ai-pulse 0.8s ease-in-out infinite;
+}
+
+.ai-copilot-status-dot.ai-copilot-status-idle {
+  background: var(--color-green);
+  animation: none;
+}
+
+@keyframes ai-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(0.85); }
+}
+
+.ai-copilot-status-text {
+  font-size: 0.75em;
+  color: var(--text-faint);
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Input Area ───────────────────────────────────────────────── */
+.ai-copilot-input-area {
+  padding: 12px 16px;
+  background: var(--background-primary);
+  flex-shrink: 0;
+}
+
+.ai-copilot-input-wrapper {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+  background: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--ai-radius);
+  padding: 8px 12px;
+  transition: border-color var(--ai-transition), box-shadow var(--ai-transition);
+}
+
+.ai-copilot-input-wrapper:focus-within {
+  border-color: var(--interactive-accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--interactive-accent) 20%, transparent);
+}
+
+.ai-copilot-input {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  resize: none;
+  font-family: var(--font-interface);
+  font-size: 0.88em;
+  color: var(--text-normal);
+  line-height: 1.5;
+  min-height: 22px;
+  max-height: 150px;
+  padding: 0;
+  overflow-y: auto;
+}
+
+.ai-copilot-input::placeholder {
+  color: var(--text-faint);
+}
+
+.ai-copilot-input:disabled {
+  opacity: 0.6;
+}
+
+.ai-copilot-send-btn {
+  background: var(--interactive-accent);
+  border: none;
+  border-radius: var(--ai-radius-sm);
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-on-accent);
+  flex-shrink: 0;
+  transition: all var(--ai-transition);
+  padding: 0;
+}
+
+.ai-copilot-send-btn:hover:not(:disabled) {
+  background: var(--interactive-accent-hover);
+  transform: scale(1.05);
+}
+
+.ai-copilot-send-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.ai-copilot-send-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.ai-copilot-hint-row {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 4px;
+}
+
+.ai-copilot-hint {
+  font-size: 0.72em;
+  color: var(--text-faint);
+}
+
+/* ── Settings ─────────────────────────────────────────────────── */
+.ai-copilot-settings-description {
+  color: var(--text-muted);
+  font-size: 0.9em;
+  margin-bottom: 24px;
+  line-height: 1.5;
+}
+
+.ai-copilot-settings-footer {
+  margin-top: 24px;
+  text-align: center;
+}
+
+.ai-copilot-settings-footer-text {
+  color: var(--text-faint);
+  font-size: 0.8em;
+}
+
+/* ── Responsive para paneles pequeños ────────────────────────── */
+@media (max-width: 300px) {
+  .ai-copilot-message-user,
+  .ai-copilot-message-assistant {
+    max-width: 100%;
+  }
+
+  .ai-copilot-header-title {
+    display: none;
+  }
+}
+
+/* ── Suggester de @Menciones ────────────────────────────────────── */
+.ai-copilot-suggester {
+  position: absolute;
+  background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--ai-radius);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 1000;
+  width: calc(100% - 24px);
+  left: 12px;
+  display: flex;
+  flex-direction: column;
+  padding: 4px;
+}
+
+.ai-copilot-suggest-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  color: var(--text-normal);
+  font-size: 0.85em;
+}
+
+.ai-copilot-suggest-item:hover,
+.ai-copilot-suggest-item.is-selected {
+  background: var(--background-modifier-hover);
+}
+
+.ai-copilot-suggest-item svg {
+  width: 14px;
+  height: 14px;
+  color: var(--text-muted);
+}
