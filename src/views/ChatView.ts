@@ -1,4 +1,4 @@
-import { ItemView, WorkspaceLeaf, MarkdownRenderer, Component, setIcon, TFile, prepareFuzzySearch } from "obsidian";
+import { ItemView, WorkspaceLeaf, MarkdownRenderer, Component, setIcon, TFile, prepareFuzzySearch, Notice } from "obsidian";
 import type AICopilotPlugin from "../main";
 import { AgentCore, type AgentEvent } from "../agent/AgentCore";
 import { ContextBuilder } from "../utils/ContextBuilder";
@@ -131,6 +131,14 @@ export class ChatView extends ItemView {
 		left.createSpan({ cls: "ai-copilot-header-title", text: "AI Copilot" });
 
 		const right = header.createDiv("ai-copilot-header-actions");
+
+		// Botón guardar chat
+		const saveChatBtn = right.createEl("button", {
+			cls: "ai-copilot-icon-btn",
+			title: "Guardar conversación",
+		});
+		setIcon(saveChatBtn, "save");
+		saveChatBtn.addEventListener("click", () => this.saveConversation());
 
 		// Botón nuevo chat
 		const newChatBtn = right.createEl("button", {
@@ -656,5 +664,77 @@ export class ChatView extends ItemView {
 			set_frontmatter: "actualizando metadatos",
 		};
 		return labels[toolName] || toolName;
+	}
+
+	private async saveConversation(): Promise<void> {
+		if (this.messages.length === 0) {
+			new Notice("No hay conversación para guardar.");
+			return;
+		}
+
+		new Notice("Generando resumen de la conversación...");
+		const fullText = this.messages
+			.filter(m => m.role === "user" || m.role === "assistant")
+			.map(m => `${m.role === "user" ? "User" : "AI"}: ${m.content}`)
+			.join("\n\n");
+
+		if (!fullText.trim()) {
+			new Notice("La conversación está vacía.");
+			return;
+		}
+
+		try {
+			const aiClient = (this.agent as any).aiClient;
+			const summarySys = "Genera un título muy corto (max 5 palabras) y 3 tags (sin #) para la siguiente conversación. Responde estrictamente en este formato JSON:\n{\n\"title\": \"titulo corto\",\n\"tags\": [\"tag1\", \"tag2\", \"tag3\"]\n}";
+			
+			const response = await aiClient.sendMessage(fullText.substring(0, 4000), summarySys, undefined, true);
+			
+			let title = `Chat-${new Date().toISOString().split('T')[0]}`;
+			let tags = ["ai-chat"];
+
+			if (response.text) {
+				try {
+					const jsonMatch = response.text.match(/\{[\s\S]*\}/);
+					if (jsonMatch) {
+						const meta = JSON.parse(jsonMatch[0]);
+						if (meta.title) title = meta.title.replace(/[\\/:\*?"<>\|]/g, '-').trim();
+						if (meta.tags && Array.isArray(meta.tags)) tags = meta.tags;
+					}
+				} catch (e) {
+					console.error("Error parseando resumen:", e);
+				}
+			}
+
+			let content = `---\n`;
+			content += `tags: [${tags.join(", ")}]\n`;
+			content += `date: ${new Date().toISOString().split('T')[0]}\n`;
+			content += `---\n\n`;
+			content += `# ${title}\n\n`;
+
+			for (const m of this.messages) {
+				if (m.role === "user" || m.role === "assistant") {
+					content += `**${m.role === "user" ? "Tú" : "AI Copilot"}**\n`;
+					content += `${m.content}\n\n`;
+				}
+			}
+
+			let folder = "AI Conversations";
+			if (!this.plugin.app.vault.getAbstractFileByPath(folder)) {
+				await this.plugin.app.vault.createFolder(folder);
+			}
+
+			let filename = `${folder}/${title}.md`;
+			let counter = 1;
+			while (this.plugin.app.vault.getAbstractFileByPath(filename)) {
+				filename = `${folder}/${title}-${counter}.md`;
+				counter++;
+			}
+
+			await this.plugin.app.vault.create(filename, content);
+			new Notice(`✅ Conversación guardada en ${filename}`);
+		} catch (err) {
+			console.error("Error saving chat:", err);
+			new Notice("❌ Error guardando conversación.");
+		}
 	}
 }

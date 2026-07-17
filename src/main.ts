@@ -146,6 +146,31 @@ export default class AICopilotPlugin extends Plugin {
 				this.activateChatView();
 			},
 		});
+
+		// Asistencia Inline
+		this.addCommand({
+			id: "inline-ai",
+			name: "Asistencia Inline con IA",
+			callback: () => {
+				const { AIClient } = require("./agent/AIClient");
+				const { InlineAIModal } = require("./views/InlineAIModal");
+				const aiClient = new AIClient(this.settings);
+				new InlineAIModal(this.app, aiClient).open();
+			}
+		});
+
+		// Smart Templates
+		this.addCommand({
+			id: "smart-templates",
+			name: "Generar desde Template Inteligente",
+			callback: async () => {
+				const { AIClient } = require("./agent/AIClient");
+				const { TemplateProcessor } = require("./agent/TemplateProcessor");
+				const aiClient = new AIClient(this.settings);
+				const processor = new TemplateProcessor(this.app, aiClient);
+				await processor.processActiveNote();
+			}
+		});
 	}
 
 	private async activateChatView(): Promise<void> {

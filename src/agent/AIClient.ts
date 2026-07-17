@@ -86,6 +86,25 @@ export class AIClient {
 		return null;
 	}
 
+	private uppercaseGeminiSchema(schema: any): any {
+		if (!schema || typeof schema !== 'object') return schema;
+		const newSchema = { ...schema };
+		if (newSchema.type && typeof newSchema.type === 'string') {
+			newSchema.type = newSchema.type.toUpperCase();
+		}
+		if (newSchema.properties) {
+			const newProps: any = {};
+			for (const key of Object.keys(newSchema.properties)) {
+				newProps[key] = this.uppercaseGeminiSchema(newSchema.properties[key]);
+			}
+			newSchema.properties = newProps;
+		}
+		if (newSchema.items) {
+			newSchema.items = this.uppercaseGeminiSchema(newSchema.items);
+		}
+		return newSchema;
+	}
+
 	private async callGeminiAPI(onToken?: (t: string) => void): Promise<AIResponse> {
 		const apiKey = this.settings.geminiApiKey;
 		if (!apiKey) return { text: "", error: "API Key de Gemini no configurada." };
@@ -119,7 +138,7 @@ export class AIClient {
 				functionDeclarations: this.tools.map(t => ({
 					name: t.name,
 					description: t.description,
-					parameters: t.parameters,
+					parameters: this.uppercaseGeminiSchema(t.parameters),
 				}))
 			}];
 		}
@@ -317,7 +336,22 @@ export class AIClient {
 
 	// ── API Pública ───────────────────────────────────────────────
 
-	async sendMessage(userMessage: string, systemPrompt: string, onToken?: (t: string) => void): Promise<AIResponse> {
+	async sendMessage(userMessage: string, systemPrompt: string, onToken?: (t: string) => void, skipHistory = false): Promise<AIResponse> {
+		if (skipHistory) {
+			const originalMessages = [...this.oaiMessages];
+			this.oaiMessages = [
+				{ role: "system", content: systemPrompt },
+				{ role: "user", content: userMessage }
+			];
+			// Temporary remove tools for inline queries to avoid confusion
+			const originalTools = this.tools;
+			this.tools = [];
+			const res = this.isGemini() ? await this.callGeminiAPI(onToken) : await this.callOAI(this.getOAIConfig(), onToken);
+			this.oaiMessages = originalMessages;
+			this.tools = originalTools;
+			return res;
+		}
+
 		if (!this.oaiMessages.length || this.oaiMessages[0].role !== "system") {
 			this.oaiMessages = [{ role: "system", content: systemPrompt }, ...this.oaiMessages];
 		} else {

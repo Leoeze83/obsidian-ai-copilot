@@ -1,56 +1,34 @@
-# Walkthrough — Obsidian AI Copilot v1.0
+# Walkthrough — Obsidian AI Copilot v1.1
 
 ## Resumen de Cambios
 
-### v1.0.0 — Release Inicial (Julio 2026)
+### v1.1.0 — Actualización Mayor (Julio 2026)
 
-#### Fase 1: MVP del Plugin
-- Creación completa del plugin desde cero con TypeScript + esbuild.
-- Panel lateral de chat (`ChatView.ts`) con:
-  - Renderizado Markdown en tiempo real
-  - Sugerencias de ejemplo clickeables en bienvenida
-  - Auto-resize del textarea de entrada
-  - Indicadores de estado animados (Pensando, Usando herramienta, Listo)
-  - Botón de nueva conversación
-- Soporte para 6 proveedores de IA:
-  - Google Gemini (API gratuita vía Google AI Studio)
-  - DeepSeek (API gratuita/de pago)
-  - Ollama (modelos locales, 100% privado)
-  - OpenAI (GPT-4o, GPT-4o-mini)
-  - API Custom (cualquier servidor compatible con OpenAI)
-  - IA Cloud Premium (OpenRouter con decenas de modelos)
+#### 1. Reparación de Herramientas (Tool Calling) en Gemini
+- Se corrigió el problema crítico donde Gemini respondía con texto en lugar de ejecutar las herramientas sobre las notas.
+- Se implementó un algoritmo recursivo (`uppercaseGeminiSchema`) en `AIClient.ts` que convierte el esquema estándar de OpenAI al estricto esquema de Google (por ejemplo, `object` -> `OBJECT`). Esto soluciona por completo el fallo de "texto plano".
 
-#### Fase 2: Herramientas del Agente
-- **20 herramientas** de Function Calling:
-  - 7 de gestión de vault (crear, leer, editar, mover, borrar, listar notas)
-  - 5 de editor (nota activa, cursor, selección, inserción)
-  - 5 de búsqueda (full-text, tags, frontmatter con scoring)
-  - 3 de metadatos (frontmatter YAML, grafo de enlaces)
-- Modo de confirmación para acciones destructivas
-- Presets de optimización de tokens (Bajo, Medio, Alto ahorro)
+#### 2. Asistencia Inline (IA en el Editor)
+- Se añadió el comando **"Asistencia Inline con IA"** (`Ctrl+K` recomendado).
+- Permite invocar a la IA directamente en la nota usando un cuadro de diálogo flotante (`InlineAIModal.ts`).
+- **Comportamiento inteligente:**
+  - Si tienes texto seleccionado, la IA lo tomará como contexto y reemplazará la selección con la versión mejorada (ej. "Resume esto" o "Mejora la redacción").
+  - Si no hay selección, simplemente generará texto desde cero y lo insertará en la posición actual del cursor.
 
-#### Fase 3: Contexto Inteligente
-- `ContextBuilder.ts`: inyección automática de la nota activa y texto seleccionado.
-- Sistema de `@menciones` con autocompletado fuzzy flotante.
-- Navegación con teclado (↑/↓/Enter/Esc) en el menú de sugerencias.
-- Inyección silenciosa del contenido de notas mencionadas al prompt.
+#### 3. Templates Inteligentes (Smart Prompts)
+- Se incorporó el comando **"Generar desde Template Inteligente"**.
+- Permite dejar "marcas" o "instrucciones" escritas en tu texto usando la sintaxis:
+  `{{AI: Escribe aquí la instrucción que quieras }}`
+- Al ejecutar el comando, el plugin procesará asíncronamente todos los bloques `{{AI: ...}}` que encuentre en la nota activa, pidiendo a la IA que genere la respuesta y reemplazando las marcas por el contenido final.
 
-#### Hito Técnico: Migración API
-- Eliminación total del SDK `@google/generative-ai`.
-- Implementación directa con `requestUrl` de Obsidian (cero dependencias externas para Gemini).
-- Diagnóstico de modelos disponibles y migración a serie Gemini 3.x.
-- Modelos gratuitos verificados:
-  - `gemini-3.5-flash` — Más reciente y potente
-  - `gemini-flash-latest` — Alias estable recomendado
-  - `gemini-flash-lite-latest` — Ultra ligero
-  - `gemini-3.1-flash-lite` — Contexto largo
-  - `gemini-3-flash-preview` — Preview generación 3
+#### 4. Guardar Historial de Conversación (Exportación al Vault)
+- Nuevo botón `Guardar` (💾) agregado a la barra superior del panel del chat.
+- Al pulsarlo, el plugin utilizará una llamada ligera al Agente para **resumir automáticamente** de qué trata la conversación (extrayendo el tema principal) y autogenerando hasta 3 **etiquetas** relevantes.
+- La conversación se exporta como un archivo Markdown limpio, con el Frontmatter correcto, dentro de una carpeta llamada `AI Conversations` (se crea sola si no existe).
 
 ### Lo que fue verificado
-- ✅ Compilación exitosa con `npm run build`
-- ✅ Plugin cargando correctamente en Obsidian
-- ✅ Icono visible en la barra lateral
-- ✅ Panel de configuración multi-proveedor funcional
-- ✅ Verificación de API Key exitosa con Gemini 3.5 Flash
-- ✅ Chat respondiendo preguntas correctamente
-- ✅ @menciones con autocompletado flotante
+- ✅ Build exitoso del plugin
+- ✅ Solución de esquema en peticiones a la API Gemini (Tool Calling funciona)
+- ✅ Cuadro de diálogo modal (InlineAIModal) renderizando correctamente
+- ✅ Inyección asíncrona de Smart Templates (`{{AI: ...}}`)
+- ✅ Procesamiento de JSON para metadatos del historial de chat
