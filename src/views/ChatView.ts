@@ -510,8 +510,8 @@ export class ChatView extends ItemView {
 					args: Record<string, unknown>;
 					description: string;
 				};
+				this.finalizeStreamMessage(); // Finalize even if showThinking is false
 				if (this.plugin.settings.showThinking) {
-					this.finalizeStreamMessage();
 					this.addToolCallMessage(data.name, data.description, data.args);
 				}
 				break;
@@ -537,11 +537,10 @@ export class ChatView extends ItemView {
 
 			case "tool-result": {
 				const data = event.data as { name: string; result: unknown; success: boolean };
+				this.finalizeStreamMessage(); // Always finalize to avoid orphaned cursors
 				if (this.plugin.settings.showThinking) {
 					this.addToolResultMessage(data.name, data.result, data.success);
 				}
-				this.currentStreamEl = null;
-				this.currentStreamContent = "";
 				break;
 			}
 
@@ -634,12 +633,15 @@ export class ChatView extends ItemView {
 		const cursor = this.currentStreamEl.querySelector(".ai-copilot-cursor");
 		if (cursor) cursor.remove();
 
-		if (this.currentStreamContent) {
+		if (this.currentStreamContent && this.currentStreamContent.trim() !== "") {
 			this.messages.push({
 				role: "assistant",
 				content: this.currentStreamContent,
 				timestamp: Date.now(),
 			});
+		} else {
+			// Remove the empty bubble element from DOM if there's no real text
+			this.currentStreamEl.remove();
 		}
 
 		this.currentStreamEl = null;
