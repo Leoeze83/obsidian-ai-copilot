@@ -75,7 +75,8 @@ export class AgentCore {
 	async sendMessage(
 		userMessage: string,
 		onEvent: EventCallback,
-		mentionedFilesContext?: string
+		mentionedFilesContext?: string,
+		images?: { data: string; mime: string; base64: string }[]
 	): Promise<void> {
 		if (!this.aiClient.isInitialized()) {
 			try {
@@ -113,7 +114,9 @@ export class AgentCore {
 				systemContext,
 				(token) => {
 					onEvent({ type: "token", data: { token } });
-				}
+				},
+				false,
+				images
 			);
 
 			if (response.error) {

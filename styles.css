@@ -700,3 +700,68 @@
   height: 14px;
   color: var(--text-muted);
 }
+
+/* Image Previews & Messages */
+.ai-copilot-input.drag-over {
+  border: 2px dashed var(--interactive-accent);
+  background: var(--background-modifier-active-hover);
+}
+
+.ai-copilot-image-previews {
+  display: flex;
+  gap: 8px;
+  padding: 0 10px;
+  margin-bottom: 8px;
+}
+
+.ai-copilot-image-preview-wrapper {
+  position: relative;
+  display: inline-block;
+  width: 48px;
+  height: 48px;
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid var(--background-modifier-border);
+}
+
+.ai-copilot-image-preview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.ai-copilot-image-remove-btn {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  background: rgba(0, 0, 0, 0.6);
+  border: none;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: white;
+}
+
+.ai-copilot-image-remove-btn svg {
+  width: 10px;
+  height: 10px;
+}
+
+.ai-copilot-message-images {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.ai-copilot-message-img {
+  max-width: 100%;
+  border-radius: 6px;
+  max-height: 250px;
+}
+

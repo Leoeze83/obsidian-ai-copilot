@@ -13,6 +13,7 @@ interface ChatMessageUI {
 	toolArgs?: Record<string, unknown>;
 	isConfirmation?: boolean;
 	confirmationId?: string;
+	images?: { data: string; mime: string }[];
 }
 
 /**
@@ -40,6 +41,10 @@ export class ChatView extends ItemView {
 	private statusBar!: HTMLElement;
 	private currentStreamEl: HTMLElement | null = null;
 	private currentStreamContent = "";
+
+	// Imágenes adjuntas
+	private attachedImages: { data: string; mime: string; base64: string }[] = [];
+	private imagePreviewContainer!: HTMLElement;
 
 	constructor(leaf: WorkspaceLeaf, plugin: AICopilotPlugin) {
 		super(leaf);
@@ -163,12 +168,37 @@ export class ChatView extends ItemView {
 	private buildInputArea(inputArea: HTMLElement): void {
 		const inputWrapper = inputArea.createDiv("ai-copilot-input-wrapper");
 
+		this.imagePreviewContainer = inputWrapper.createDiv("ai-copilot-image-previews");
+
 		this.inputEl = inputWrapper.createEl("textarea", {
 			cls: "ai-copilot-input",
 			attr: {
-				placeholder: "Escribe un mensaje... (Enter para enviar)",
+				placeholder: "Escribe un mensaje o pega una imagen...",
 				rows: "1",
 			},
+		});
+
+		// Eventos de arrastrar y soltar
+		this.inputEl.addEventListener("dragover", (e) => {
+			e.preventDefault();
+			this.inputEl.addClass("drag-over");
+		});
+		this.inputEl.addEventListener("dragleave", (e) => {
+			this.inputEl.removeClass("drag-over");
+		});
+		this.inputEl.addEventListener("drop", (e) => {
+			e.preventDefault();
+			this.inputEl.removeClass("drag-over");
+			if (e.dataTransfer && e.dataTransfer.files) {
+				this.handleAttachedFiles(Array.from(e.dataTransfer.files));
+			}
+		});
+
+		// Evento de pegar (portapapeles)
+		this.inputEl.addEventListener("paste", (e) => {
+			if (e.clipboardData && e.clipboardData.files && e.clipboardData.files.length > 0) {
+				this.handleAttachedFiles(Array.from(e.clipboardData.files));
+			}
 		});
 
 		// Auto-resize del textarea
@@ -203,6 +233,50 @@ export class ChatView extends ItemView {
 		// Hint row
 		const hintRow = inputArea.createDiv("ai-copilot-hint-row");
 		hintRow.createSpan({ cls: "ai-copilot-hint", text: "Shift+Enter para nueva línea" });
+	}
+
+	// ── Manejo de Archivos e Imágenes ───────────────────────────────
+
+	private async handleAttachedFiles(files: File[]): Promise<void> {
+		for (const file of files) {
+			if (!file.type.startsWith("image/")) {
+				new Notice(`El archivo ${file.name} no es una imagen soportada.`);
+				continue;
+			}
+
+			if (this.attachedImages.length >= 3) {
+				new Notice("Máximo 3 imágenes permitidas por mensaje.");
+				break;
+			}
+
+			const reader = new FileReader();
+			reader.onload = (e) => {
+				const result = e.target?.result as string; // Data URL
+				if (result) {
+					const base64 = result.split(",")[1];
+					this.attachedImages.push({ data: result, mime: file.type, base64 });
+					this.renderImagePreviews();
+				}
+			};
+			reader.readAsDataURL(file);
+		}
+	}
+
+	private renderImagePreviews(): void {
+		this.imagePreviewContainer.empty();
+		for (let i = 0; i < this.attachedImages.length; i++) {
+			const imgObj = this.attachedImages[i];
+			const wrapper = this.imagePreviewContainer.createDiv("ai-copilot-image-preview-wrapper");
+			
+			const img = wrapper.createEl("img", { cls: "ai-copilot-image-preview", attr: { src: imgObj.data } });
+			
+			const removeBtn = wrapper.createEl("button", { cls: "ai-copilot-image-remove-btn", title: "Eliminar" });
+			setIcon(removeBtn, "cross");
+			removeBtn.addEventListener("click", () => {
+				this.attachedImages.splice(i, 1);
+				this.renderImagePreviews();
+			});
+		}
 	}
 
 	// ── Suggester de Menciones ───────────────────────────────────────
@@ -371,14 +445,15 @@ export class ChatView extends ItemView {
 
 	private async handleSend(): Promise<void> {
 		const text = this.inputEl.value.trim();
-		if (!text || this.sendBtn.disabled) return;
+		if ((!text && this.attachedImages.length === 0) || this.sendBtn.disabled) return;
 
 		// Limpiar bienvenida en primer mensaje
 		const welcome = this.messagesContainer.querySelector(".ai-copilot-welcome");
 		if (welcome) welcome.remove();
 
 		// Añadir mensaje del usuario
-		this.addMessage({ role: "user", content: text, timestamp: Date.now() });
+		const imagesToSend = this.attachedImages.length > 0 ? [...this.attachedImages] : undefined;
+		this.addMessage({ role: "user", content: text, timestamp: Date.now(), images: imagesToSend });
 
 		// Limpiar input
 		this.inputEl.value = "";
@@ -395,7 +470,11 @@ export class ChatView extends ItemView {
 		this.mentionedFiles.clear();
 
 		// Enviar al agente
-		await this.agent.sendMessage(text, (event) => this.handleAgentEvent(event), mentionContext);
+		await this.agent.sendMessage(text, (event) => this.handleAgentEvent(event), mentionContext, imagesToSend);
+
+		// Limpiar adjuntos
+		this.attachedImages = [];
+		this.renderImagePreviews();
 
 		this.setInputEnabled(true);
 		this.inputEl.focus();
@@ -488,7 +567,16 @@ export class ChatView extends ItemView {
 		});
 
 		if (msg.role === "user") {
-			msgEl.createDiv({ cls: "ai-copilot-message-content", text: msg.content });
+			const contentContainer = msgEl.createDiv({ cls: "ai-copilot-message-content-container" });
+			if (msg.images && msg.images.length > 0) {
+				const imgGrid = contentContainer.createDiv({ cls: "ai-copilot-message-images" });
+				for (const img of msg.images) {
+					imgGrid.createEl("img", { attr: { src: img.data }, cls: "ai-copilot-message-img" });
+				}
+			}
+			if (msg.content) {
+				contentContainer.createDiv({ cls: "ai-copilot-message-content", text: msg.content });
+			}
 		} else {
 			const contentEl = msgEl.createDiv({ cls: "ai-copilot-message-content" });
 			MarkdownRenderer.render(this.plugin.app, msg.content, contentEl, "", this.component);

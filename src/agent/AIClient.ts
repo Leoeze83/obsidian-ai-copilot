@@ -29,6 +29,7 @@ type OAIMessage = {
 	}>;
 	tool_call_id?: string;
 	name?: string;
+	images?: { data: string; mime: string; base64: string }[];
 };
 
 export class AIClient {
@@ -55,7 +56,19 @@ export class AIClient {
 		if (msg.role === "system") return null;
 
 		if (msg.role === "user") {
-			return { role: "user", parts: [{ text: msg.content || "" }] };
+			const parts: any[] = [];
+			if (msg.content) parts.push({ text: msg.content });
+			if (msg.images) {
+				for (const img of msg.images) {
+					parts.push({
+						inlineData: {
+							mimeType: img.mime,
+							data: img.base64,
+						}
+					});
+				}
+			}
+			return { role: "user", parts };
 		}
 		if (msg.role === "assistant") {
 			const parts: any[] = [];
@@ -141,6 +154,7 @@ export class AIClient {
 					parameters: this.uppercaseGeminiSchema(t.parameters),
 				}))
 			}];
+			body.toolConfig = { functionCallingConfig: { mode: "AUTO" } };
 		}
 
 		try {
@@ -336,12 +350,12 @@ export class AIClient {
 
 	// ── API Pública ───────────────────────────────────────────────
 
-	async sendMessage(userMessage: string, systemPrompt: string, onToken?: (t: string) => void, skipHistory = false): Promise<AIResponse> {
+	async sendMessage(userMessage: string, systemPrompt: string, onToken?: (t: string) => void, skipHistory = false, images?: { data: string; mime: string; base64: string }[]): Promise<AIResponse> {
 		if (skipHistory) {
 			const originalMessages = [...this.oaiMessages];
 			this.oaiMessages = [
 				{ role: "system", content: systemPrompt },
-				{ role: "user", content: userMessage }
+				{ role: "user", content: userMessage, images }
 			];
 			// Temporary remove tools for inline queries to avoid confusion
 			const originalTools = this.tools;
@@ -357,7 +371,7 @@ export class AIClient {
 		} else {
 			this.oaiMessages[0].content = systemPrompt;
 		}
-		this.oaiMessages.push({ role: "user", content: userMessage });
+		this.oaiMessages.push({ role: "user", content: userMessage, images });
 		
 		if (this.isGemini()) {
 			return this.callGeminiAPI(onToken);
@@ -396,7 +410,7 @@ export class AIClient {
 				`Eres AI Copilot en Obsidian (vault: "${vaultName}").` +
 				(activeNoteName ? ` Nota activa: "${activeNoteName}".` : "") +
 				` Fecha: ${date}. Idioma: el del usuario. Sé breve y preciso.` +
-				` Antes de ejecutar acciones, explica brevemente qué harás.` +
+				` CRÍTICO: Si el usuario te pide crear, leer, buscar o modificar una nota, DEBES usar obligatoriamente la herramienta (tool) correspondiente. NUNCA respondas simulando el contenido de la nota en el chat.` +
 				` Usa formato Markdown en tus respuestas.`
 			);
 		}
@@ -409,7 +423,7 @@ ${activeNoteName ? `- Nota activa: "${activeNoteName}"` : "- Sin nota activa"}
 
 ## Comportamiento
 - Responde en el idioma del usuario
-- Antes de usar herramientas, explica brevemente qué harás y por qué
+- CRÍTICO: Si el usuario te pide crear, leer, editar, buscar o listar notas, DEBES ejecutar la llamada a la función (tool call) correspondiente. NO simules la acción imprimiendo el contenido en el chat.
 - Para acciones destructivas (borrar, sobreescribir), confirma primero
 - Sugiere mejoras de organización cuando sea relevante
 - Usa Markdown en tus respuestas (encabezados, listas, código)

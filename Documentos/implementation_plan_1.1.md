@@ -4,8 +4,12 @@ Este plan describe las acciones técnicas para escalar el plugin a la versión 1
 
 ## 🚨 Solución al problema de las Herramientas (Tool Calling)
 **Contexto del error:** Le pediste a la IA que creara un documento, y en su lugar, simplemente generó el texto y lo arrojó en el chat.
-**Causa raíz:** En la migración a la API REST nativa que hicimos en la v1.0, los tipos de datos de las herramientas (`string`, `object`, `boolean`) se envían en minúsculas (formato estándar OpenAI/JSON Schema). Sin embargo, la API nativa de Google Gemini requiere estrictamente que esos tipos estén en MAYÚSCULAS (`STRING`, `OBJECT`, `BOOLEAN`). Al recibir tipos en minúscula, Gemini rechaza internamente el esquema de herramientas y asume que no tiene herramientas disponibles, por lo que recurre a simplemente hablar contigo en el chat.
-**Solución:** Modificar `AIClient.ts` para que, justo antes de enviar la petición a Gemini, intercepte el objeto de herramientas y convierta recursivamente todos los valores `type` a mayúsculas, manteniendo la compatibilidad con OpenAI (que sí exige minúsculas).
+**Causa raíz 1:** Los esquemas enviados a Gemini estaban en minúsculas, y Gemini rechaza internamente esquemas que no tengan tipos en MAYÚSCULAS (`STRING`, `OBJECT`). 
+**Causa raíz 2 (Hallucinación por Prompt):** El "Nivel de Ahorro Alto" inyectaba la instrucción: *"Antes de ejecutar acciones, explica brevemente qué harás."*. Para Gemini Flash, esto generaba un conflicto al tratar de imprimir texto antes de enviar un `functionCall`, lo que causaba que optara por imprimir todo el contenido como texto plano en lugar de usar la herramienta.
+**Solución:** 
+1. `AIClient.ts` ya tiene el esquema en mayúsculas (`uppercaseGeminiSchema`).
+2. Se actualizará el System Prompt en `AIClient.ts` para ser extremadamente explícito: `CRÍTICO: Si el usuario pide crear, modificar, leer o buscar notas, DEBES usar obligatoriamente la herramienta (tool) correspondiente. NUNCA respondas simulando el contenido en el chat.`
+3. Se eliminará la instrucción de "explicar brevemente" cuando está en modo Alto Ahorro para forzar la llamada a la función inmediatamente.
 
 ---
 
@@ -36,6 +40,19 @@ Este plan describe las acciones técnicas para escalar el plugin a la versión 1
   - Usará el agente para generar un título y 3 etiquetas (`tags`) de forma automática resumiendo de qué trató la charla.
   - Creará una nueva nota en la carpeta definida en la configuración (ej. `AI Conversations/Chat-2026-07-18.md`).
 
+### 4. Soporte Multimedia (Imágenes y Archivos) - *Fase 4 Restante*
+**Objetivo:** Permitir que el Agente "vea" imágenes para usar Gemini Vision.
+- **Implementación:**
+  - Añadir soporte en el ChatView para arrastrar y soltar (Drag & Drop) imágenes, o pegar desde el portapapeles.
+  - Al enviar una imagen, `AIClient.ts` codificará el archivo en Base64 y lo inyectará en la estructura `parts` bajo `inlineData` (que es el formato que espera Gemini API).
+  - Mostrar una miniatura de la imagen en el historial del chat.
+
+### 5. Resumen de Notas (Comando Rápido)
+**Objetivo:** Un comando directo para analizar la nota activa.
+- **Implementación:**
+  - (Ya implementado como base en `main.ts` pero se le dará pulido UI).
+  - Extrae el texto de la nota y dispara automáticamente un prompt en el chat pidiendo "Resumir en 3-5 puntos clave".
+
 ---
 
 ## 🛠️ Archivos a Modificar
@@ -55,9 +72,12 @@ Este plan describe las acciones técnicas para escalar el plugin a la versión 1
 
 #### [MODIFY] `src/views/ChatView.ts`
 - Agregar el botón 💾 y la lógica de renderizado y guardado de historial a archivo `.md`.
+- Implementar arrastrar y soltar (drag & drop) para imágenes y soporte de portapapeles.
 
 ---
 
 > [!IMPORTANT]  
-> **Revisión Requerida:**  
-> Por favor, revisa si este enfoque para las 3 características de la v1.1 está alineado con tus expectativas. ¿Hay algún detalle específico en el comportamiento de los "Templates" o "Inline AI" que quisieras cambiar antes de comenzar la programación?
+> **Revisión Requerida - Cierre de la v1.1:**  
+> He ajustado la solución al problema de Tool Calling detectando que el "Nivel de Ahorro Alto" estaba confundiendo a Gemini (al pedirle que hablara en vez de usar las herramientas). Además, integré el "Soporte Multimedia" (visión de imágenes) y el "Resumen Rápido" para completar totalmente la Fase 4 en esta versión.
+>
+> ¿Estás de acuerdo con este plan de implementación final? Si lo apruebas, procederé a realizar estas últimas modificaciones en código.

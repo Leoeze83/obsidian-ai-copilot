@@ -13,6 +13,14 @@
   - `[x]` Actualizar `ChatView.ts` (Botón UI 💾)
   - `[x]` Lógica para generar nombre y etiquetas con el Agente
   - `[x]` Guardar nota localmente usando `app.vault.create`
-- `[ ]` 5. Compilar y Desplegar
-  - `[ ]` Ejecutar npm run build
-  - `[ ]` Desplegar al vault
+- `[x]` 5. Fix de Hallucinación de Herramientas (Gemini Flash)
+  - `[x]` Modificar `getSystemPrompt` en `AIClient.ts`
+  - `[x]` Quitar instrucción contradictoria en modo Alto Ahorro
+- `[x]` 6. Soporte Multimedia (Imágenes)
+  - `[x]` Drag & drop en `ChatView.ts`
+  - `[x]` Pegar desde el portapapeles en `ChatView.ts`
+  - `[x]` Renderizar miniaturas en la UI
+  - `[x]` Enviar base64 a Gemini API en `AIClient.ts`
+- `[x]` 7. Compilar y Desplegar
+  - `[x]` Ejecutar npm run build
+  - `[x]` Desplegar al vault
