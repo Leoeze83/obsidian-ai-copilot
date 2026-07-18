@@ -1,6 +1,6 @@
 {
   "name": "obsidian-ai-copilot",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "description": "AI Copilot plugin for Obsidian powered by Google Gemini",
   "main": "main.js",
   "scripts": {

@@ -2,6 +2,7 @@ import { ItemView, WorkspaceLeaf, MarkdownRenderer, Component, setIcon, TFile, p
 import type AICopilotPlugin from "../main";
 import { AgentCore, type AgentEvent } from "../agent/AgentCore";
 import { ContextBuilder } from "../utils/ContextBuilder";
+import { ConfirmationModal } from "./ConfirmationModal";
 
 export const CHAT_VIEW_TYPE = "ai-copilot-chat-view";
 
@@ -521,9 +522,16 @@ export class ChatView extends ItemView {
 					toolName: string;
 					description: string;
 					args: Record<string, unknown>;
+					onConfirm: (confirmed: boolean) => void;
 				};
 				this.finalizeStreamMessage();
-				this.addConfirmationMessage(data.toolName, data.description, data.args);
+				new ConfirmationModal(
+					this.plugin.app,
+					data.toolName,
+					data.description,
+					data.args,
+					(confirmed) => data.onConfirm(confirmed)
+				).open();
 				break;
 			}
 
@@ -653,49 +661,6 @@ export class ChatView extends ItemView {
 		msgEl.addClass(success ? "ai-copilot-tool-success" : "ai-copilot-tool-error");
 	}
 
-	private addConfirmationMessage(
-		toolName: string,
-		description: string,
-		args: Record<string, unknown>
-	): void {
-		const msgEl = this.messagesContainer.createDiv("ai-copilot-confirmation");
-		const header = msgEl.createDiv("ai-copilot-confirmation-header");
-		setIcon(header.createSpan(), "alert-triangle");
-		header.createSpan({ cls: "ai-copilot-confirmation-title", text: " Confirmar acción" });
-
-		msgEl.createEl("p", {
-			cls: "ai-copilot-confirmation-desc",
-			text: description,
-		});
-
-		const btnRow = msgEl.createDiv("ai-copilot-confirmation-buttons");
-
-		const confirmBtn = btnRow.createEl("button", {
-			cls: "ai-copilot-confirm-btn",
-			text: "✅ Confirmar",
-		});
-		confirmBtn.addEventListener("click", () => {
-			this.agent.resolveConfirmation(true);
-			msgEl.addClass("ai-copilot-confirmation-resolved");
-			confirmBtn.disabled = true;
-			rejectBtn.disabled = true;
-			confirmBtn.textContent = "✅ Confirmado";
-		});
-
-		const rejectBtn = btnRow.createEl("button", {
-			cls: "ai-copilot-reject-btn",
-			text: "❌ Cancelar",
-		});
-		rejectBtn.addEventListener("click", () => {
-			this.agent.resolveConfirmation(false);
-			msgEl.addClass("ai-copilot-confirmation-resolved");
-			confirmBtn.disabled = true;
-			rejectBtn.disabled = true;
-			rejectBtn.textContent = "❌ Cancelado";
-		});
-
-		this.scrollToBottom();
-	}
 
 	private addErrorMessage(message: string): void {
 		const msgEl = this.messagesContainer.createDiv("ai-copilot-error-message");

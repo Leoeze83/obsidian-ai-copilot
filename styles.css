@@ -765,3 +765,25 @@
   max-height: 250px;
 }
 
+
+/* Confirmation Modal */
+.ai-copilot-confirmation-modal h2 {
+  margin-top: 0;
+  color: var(--text-error);
+}
+
+.ai-copilot-confirmation-args-title {
+  margin-bottom: 4px;
+}
+
+.ai-copilot-confirmation-args {
+  background-color: var(--background-secondary);
+  border-radius: 4px;
+  padding: 8px;
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid var(--background-modifier-border);
+  font-size: 0.85em;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}

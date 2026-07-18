@@ -1,7 +1,7 @@
 {
   "id": "obsidian-ai-copilot",
   "name": "AI Copilot",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "minAppVersion": "1.4.0",
   "description": "Tu agente IA personal en Obsidian, potenciado por Google Gemini. Lee, crea, edita notas y responde tus preguntas desde un chat integrado.",
   "author": "Obsidian AI Copilot",
